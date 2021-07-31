@@ -4,51 +4,48 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.core.mail import send_mail
-from webapp.mixin import AuthMixin
 
 
 # Create your models here.
 
-class SystemUserManager(BaseUserManager):
-    use_in_migrations = True
-
-    def _create_user(self, username, email, password, **extra_fields):
+class CallWorksUserManager(BaseUserManager):
+    def create_user(self, username, email, date_of_birth=None, password=None):
         """
-        Create and save a user with the given username, email, and password.
+        Creates and saves a User with the given username, email, date of
+        birth and password.
         """
         if not username:
-            raise ValueError('The given username must be set')
-        email = self.normalize_email(email)
-        username = self.model.normalize_username(username)
-        user = self.model(username=username, email=email, **extra_fields)
+            raise ValueError('Users must have an username')
+        if not email:
+            raise ValueError('Users must have an email address')
+
+        user = self.model(
+            username=self.normalize_username(username),
+            email=self.normalize_email(email),
+            date_of_birth=date_of_birth,
+        )
+
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_user(self, username, email=None, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', False)
-        extra_fields.setdefault('is_superuser', False)
-        return self._create_user(username, email, password, **extra_fields)
+    def create_superuser(self, username, email, date_of_birth=None, password=None):
+        """
+        Creates and saves a superuser with the given email, date of
+        birth and password.
+        """
+        user = self.create_user(
+            username,
+            email,
+            password=password,
+            date_of_birth=date_of_birth,
+        )
+        user.is_admin = True
+        user.save(using=self._db)
+        return user
 
-    def create_superuser(self, username, email, password, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
 
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError('Superuser must have is_staff=True.')
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True.')
-
-        return self._create_user(username, email, password, **extra_fields)
-
-
-class SystemAbstractUser(AbstractBaseUser, PermissionsMixin):
-    """from django.contrib.auth.models import PermissionsMixin, UnicodeUsernameValidator, BaseUserManager
-    An abstract base class implementing a fully featured User model with
-    admin-compliant permissions.
-
-    Username and password are required. Other fields are optional.
-    """
+class CallWorksUser(AbstractBaseUser):
     username_validator = UnicodeUsernameValidator()
 
     username = models.CharField(
@@ -65,33 +62,43 @@ class SystemAbstractUser(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(_('last name'), max_length=150, blank=True)
     email = models.EmailField(_('email address'), blank=False, null=False, unique=True)
 
+    date_of_birth = models.DateField(null=True)
+
     # time_zone = models.ForeignKey(TimeZone, null=True, blank=True, on_delete=models.CASCADE)
 
-    is_staff = models.BooleanField(
-        _('staff status'),
-        default=False,
-        help_text=_('Designates whether the user can log into this admin site.'),
-    )
-    is_active = models.BooleanField(
-        _('active'),
-        default=True,
-        help_text=_(
-            'Designates whether this user should be treated as active. '
-            'Unselect this instead of deleting accounts.'
-        ),
-    )
+    is_active = models.BooleanField(default=True)
+    is_admin = models.BooleanField(default=False)
+
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
 
-    objects = SystemUserManager()
+    objects = CallWorksUserManager()
 
     EMAIL_FIELD = 'email'
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email', 'first_name', 'last_name']
+
+    def __str__(self):
+        return self.email
+
+    def has_perm(self, perm, obj=None):
+        "Does the user have a specific permission?"
+        # Simplest possible answer: Yes, always
+        return True
+
+    def has_module_perms(self, app_label):
+        "Does the user have permissions to view the app `app_label`?"
+        # Simplest possible answer: Yes, always
+        return True
+
+    @property
+    def is_staff(self):
+        "Is the user a member of staff?"
+        # Simplest possible answer: All admins are staff
+        return self.is_admin
 
     class Meta:
         verbose_name = _('user')
         verbose_name_plural = _('users')
-        abstract = True
 
     def clean(self):
         super().clean()
@@ -111,25 +118,3 @@ class SystemAbstractUser(AbstractBaseUser, PermissionsMixin):
     def email_user(self, subject, message, from_email=None, **kwargs):
         """Send an email to this user."""
         send_mail(subject, message, from_email, [self.email], **kwargs)
-
-
-class SystemUser(SystemAbstractUser, AuthMixin):
-    """
-    Users within the Django authentication system are represented by this
-    model.
-    """
-
-    class Meta(SystemAbstractUser.Meta):
-        swappable = 'AUTH_USER_MODEL'
-
-    def __str__(self):
-        return self.get_full_name()
-
-    def dict(self):
-        return {
-            'id': self.id,
-            'username': self.username,
-            'email': self.email,
-            'name': self.get_full_name(),
-            # 'timezone': self.time_zone.dict() if self.time_zone else None
-        }
