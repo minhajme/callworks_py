@@ -16,9 +16,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from webapp.views import dashboard
+from webapp.views import dashboard, index
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('dashboard/', dashboard)
+    path('', index),
+    path('dashboard/', dashboard, name='dashboard')
 ]
