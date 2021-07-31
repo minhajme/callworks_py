@@ -20,7 +20,7 @@ class CallWorksUserManager(BaseUserManager):
             raise ValueError('Users must have an email address')
 
         user = self.model(
-            username=self.normalize_username(username),
+            username=AbstractBaseUser.normalize_username(username),
             email=self.normalize_email(email),
             date_of_birth=date_of_birth,
         )
