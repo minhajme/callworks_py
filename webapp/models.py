@@ -9,7 +9,7 @@ from django.core.mail import send_mail
 # Create your models here.
 
 class CallWorksUserManager(BaseUserManager):
-    def create_user(self, username, email, date_of_birth=None, password=None):
+    def create_user(self, username, email, date_of_birth=None, password=None, **kwargs):
         """
         Creates and saves a User with the given username, email, date of
         birth and password.
@@ -23,13 +23,14 @@ class CallWorksUserManager(BaseUserManager):
             username=AbstractBaseUser.normalize_username(username),
             email=self.normalize_email(email),
             date_of_birth=date_of_birth,
+            **kwargs
         )
 
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, username, email, date_of_birth=None, password=None):
+    def create_superuser(self, username, email, date_of_birth=None, password=None, **kwargs):
         """
         Creates and saves a superuser with the given email, date of
         birth and password.
@@ -39,10 +40,14 @@ class CallWorksUserManager(BaseUserManager):
             email,
             password=password,
             date_of_birth=date_of_birth,
+            **kwargs
         )
         user.is_admin = True
         user.save(using=self._db)
         return user
+
+    def get_by_email(self, email):
+        return self.get(email=email)
 
 
 class CallWorksUser(AbstractBaseUser):

@@ -15,11 +15,24 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.views.generic import RedirectView
 
-from webapp.views import dashboard, index
+from webapp.sample_views import dashboard, index, SampleView
+from webapp.views import CallWorksLoginView, UserProfileView, CustomizedAdminLoginView, logout
 
 urlpatterns = [
+    # path('login/', RedirectView.as_view(pattern_name='accounts-login')),
+    # path('accounts/login/', CallWorksLoginView.as_view(), name="accounts-login"), # TODO email/pass login not working
+
+    path('accounts/login/', RedirectView.as_view(pattern_name='login')),
+    path('accounts/profile/', UserProfileView.as_view(), name="profile"),
+
+    path('login/', CustomizedAdminLoginView.as_view(), name='login'),
+    path('logout', logout, name='logout'),
+
     path('admin/', admin.site.urls),
-    path('', index),
-    path('dashboard/', dashboard, name='dashboard')
+
+    path('', index, name="index"),
+    path('dashboard/', dashboard, name='dashboard'),
+    path('sample/', SampleView.as_view())
 ]

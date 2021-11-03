@@ -77,11 +77,13 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'callworks',
         'USER': 'callworks',
-        'PASSWORD': 'callworks',
+        'PASSWORD': '94fb0562',
         'HOST': 'localhost',
         'PORT': '5432',
     }
 }
+
+AUTHENTICATION_BACKENDS = ['webapp.backends.EmailBackend', 'django.contrib.auth.backends.ModelBackend']
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -115,6 +117,10 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+# use this instead of view.redirect_authenticated_user to avoid social media fingerprinting
+LOGIN_REDIRECT_URL = '/'  # redirect after successful login
+REDIRECT_AUTHENTICATED_USER = False  # for already logged in users if visits the login page again
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
