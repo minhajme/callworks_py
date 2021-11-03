@@ -46,4 +46,4 @@ def index(request):
 @login_required
 def dashboard(request):
     data = {}
-    return render(request, 'sbadmin2/index.html', data)
+    return render(request, 'default/webapp/dashboard.html', data)

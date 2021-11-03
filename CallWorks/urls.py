@@ -17,8 +17,8 @@ from django.contrib import admin
 from django.urls import path
 from django.views.generic import RedirectView
 
-from webapp.sample_views import dashboard, index, SampleView
-from webapp.views import CallWorksLoginView, UserProfileView, CustomizedAdminLoginView, logout
+from webapp.sample_views import SampleView
+from webapp.views import CallWorksLoginView, UserProfileView, CustomizedAdminLoginView, logout, DashboardView
 
 urlpatterns = [
     # path('login/', RedirectView.as_view(pattern_name='accounts-login')),
@@ -32,7 +32,7 @@ urlpatterns = [
 
     path('admin/', admin.site.urls),
 
-    path('', index, name="index"),
-    path('dashboard/', dashboard, name='dashboard'),
+    path('', RedirectView.as_view(pattern_name='dashboard'), name="index"),
+    path('dashboard/', DashboardView.as_view(), name='dashboard'),
     path('sample/', SampleView.as_view())
 ]

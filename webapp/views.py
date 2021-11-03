@@ -17,6 +17,7 @@ from django.conf import settings
 from webapp.forms import AuthForm
 
 
+# TODO NEED FIX
 class CallWorksLoginView(LoginView):
     form_class = AuthForm
     redirect_authenticated_user = settings.REDIRECT_AUTHENTICATED_USER
@@ -114,3 +115,14 @@ class CustomizedAdminLoginView(View):
 def logout(request):
     auth_logout(request)
     return HttpResponseRedirect('/')
+
+
+class DashboardView(View):
+    template_name = "default/webapp/dashboard.html"
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request):
+        return render(request, self.template_name, {"msg": ''})
